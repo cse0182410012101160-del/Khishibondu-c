@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: agro-bridge-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm ci && npx prisma generate
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
