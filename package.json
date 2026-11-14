@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "@google/genai": "^3.3.0"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.5",
+    "tsx": "^4.23.15"
+  },
+  "scripts": {
+    "images:check": "tsx tools/images/check.ts",
+    "images:resize": "tsx tools/images/resize.ts"
+  }
+}

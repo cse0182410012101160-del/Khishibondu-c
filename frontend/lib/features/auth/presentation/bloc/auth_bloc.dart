@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'package:agro_bridge/core/network/firebase_initializer.dart';
+import 'package:agro_bridge/core/network/api_client.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/user_entity.dart';
@@ -97,8 +100,9 @@ class AuthErrorState extends AuthState {
 // BLoC
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
+  final ApiClient _apiClient;
 
-  AuthBloc(this._authRepository) : super(AuthInitial()) {
+  AuthBloc(this._authRepository, this._apiClient) : super(AuthInitial()) {
     on<AppStartedEvent>(_onAppStarted);
     on<RequestOtpEvent>(_onRequestOtp);
     on<VerifyOtpEvent>(_onVerifyOtp);
@@ -111,6 +115,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onAppStarted(AppStartedEvent event, Emitter<AuthState> emit) async {
     final user = await _authRepository.getCurrentUser();
     if (user != null) {
+      unawaited(FirebaseInitializer.registerDevice(_apiClient));
       emit(AuthenticatedState(user));
     } else {
       emit(UnauthenticatedState());
@@ -136,6 +141,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } else if (res['user'] != null) {
         final user = await _authRepository.getCurrentUser();
         if (user != null) {
+          unawaited(FirebaseInitializer.registerDevice(_apiClient));
           emit(AuthenticatedState(user));
         } else {
           emit(UnauthenticatedState());
@@ -150,6 +156,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     try {
       final user = await _authRepository.register(event.data);
+      unawaited(FirebaseInitializer.registerDevice(_apiClient));
       emit(AuthenticatedState(user));
     } catch (e) {
       emit(AuthErrorState(e.toString()));
@@ -160,6 +167,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     try {
       final user = await _authRepository.demoLogin(event.role);
+      unawaited(FirebaseInitializer.registerDevice(_apiClient));
       emit(AuthenticatedState(user));
     } catch (e) {
       emit(AuthErrorState(e.toString()));

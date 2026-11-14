@@ -18,6 +18,7 @@ import 'features/weather/presentation/bloc/weather_bloc.dart';
 import 'features/traceability/presentation/bloc/traceability_bloc.dart';
 import 'features/chat/presentation/bloc/chat_bloc.dart';
 import 'features/analytics/presentation/bloc/analytics_bloc.dart';
+import 'features/catalog/presentation/bloc/catalog_bloc.dart';
 
 // Screens
 import 'features/auth/presentation/screens/login_screen.dart';
@@ -30,7 +31,14 @@ Future<void> main() async {
   } catch (e) {
     debugPrint('Firebase init bypassed: $e');
   }
-  await initDependencies();
+  try {
+    await initDependencies();
+  } catch (e, st) {
+    // Safety net: never let dependency initialization crash the app.
+    // On Flutter Web, plugins like sqflite (no browser DB factory) can throw
+    // during startup; we fall back to running the app without those services.
+    debugPrint('⚠️ Dependency init bypassed: $e\n$st');
+  }
   runApp(const AgroBridgeApp());
 }
 
@@ -42,7 +50,8 @@ class AgroBridgeApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<LocaleCubit>.value(value: sl<LocaleCubit>()),
-        BlocProvider<AuthBloc>(create: (_) => sl<AuthBloc>()..add(AppStartedEvent())),
+        BlocProvider<AuthBloc>(
+            create: (_) => sl<AuthBloc>()..add(AppStartedEvent())),
         BlocProvider<MarketplaceBloc>(create: (_) => sl<MarketplaceBloc>()),
         BlocProvider<OrdersBloc>(create: (_) => sl<OrdersBloc>()),
         BlocProvider<EscrowBloc>(create: (_) => sl<EscrowBloc>()),
@@ -51,6 +60,7 @@ class AgroBridgeApp extends StatelessWidget {
         BlocProvider<TraceabilityBloc>(create: (_) => sl<TraceabilityBloc>()),
         BlocProvider<ChatBloc>(create: (_) => sl<ChatBloc>()),
         BlocProvider<AnalyticsBloc>(create: (_) => sl<AnalyticsBloc>()),
+        BlocProvider<CatalogBloc>(create: (_) => sl<CatalogBloc>()..add(LoadCategories())),
       ],
       child: BlocBuilder<LocaleCubit, Locale>(
         builder: (context, locale) {
@@ -58,7 +68,8 @@ class AgroBridgeApp extends StatelessWidget {
             title: 'Agro-Bridge',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
-            builder: (context, child) => AgroAppBackdrop(child: child ?? const SizedBox.shrink()),
+            builder: (context, child) =>
+                AgroAppBackdrop(child: child ?? const SizedBox.shrink()),
             locale: locale,
             supportedLocales: const [
               Locale('bn', ''), // Bangla first

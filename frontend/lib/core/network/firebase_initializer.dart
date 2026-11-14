@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
+import 'api_client.dart';
 
 /// One-shot Firebase bootstrap for Agro-Bridge.
 ///
@@ -45,9 +46,11 @@ class FirebaseInitializer {
       if (!kIsWeb) {
         try {
           if (!kDebugMode) {
-            await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+            await FirebaseCrashlytics.instance
+                .setCrashlyticsCollectionEnabled(true);
           } else {
-            await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
+            await FirebaseCrashlytics.instance
+                .setCrashlyticsCollectionEnabled(false);
           }
         } catch (e) {
           debugPrint('⚠️ [Crashlytics] Bypassed: $e');
@@ -79,6 +82,18 @@ class FirebaseInitializer {
       _initialized = true;
     } catch (e) {
       debugPrint('⚠️ [FirebaseInitializer] Non-fatal init warning: $e');
+    }
+  }
+
+  static Future<void> registerDevice(ApiClient client) async {
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token != null && token.isNotEmpty) {
+        await client.post('/devices',
+            data: {'token': token, 'platform': defaultTargetPlatform.name});
+      }
+    } catch (e) {
+      debugPrint('FCM device registration skipped: $e');
     }
   }
 

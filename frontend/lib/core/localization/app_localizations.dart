@@ -63,7 +63,8 @@ class AppLocalizations {
       'creditScoreTitle': 'Agro-Bridge Credit Score',
       'creditTier': 'Credit Tier',
       'preApprovedLoan': 'Pre-Approved Credit Limit',
-      'noCollateralNotice': 'Zero Physical Collateral: Secured via Verified Sales Cashflow',
+      'noCollateralNotice':
+          'Zero Physical Collateral: Secured via Verified Sales Cashflow',
       'emiCalculator': 'EMI & Repayment Simulator',
       'calculateEmi': 'Calculate Installments',
       'applyForLoan': 'Apply for Agricultural Microloan',
@@ -100,6 +101,42 @@ class AppLocalizations {
       'minOrder': 'Min Order',
       'pluggableFeatures': 'Pluggable Features Catalog',
       'batchProvenanceScanner': 'Batch Traceability Scanner',
+      'mapDetected': 'Detected: {division}',
+      'mapHint': 'Tap the marker to browse harvest lots',
+      'viewLots': 'View lots',
+      'assistantTitle': 'Bangla Farming Assistant',
+      'assistantPrompt':
+          'Ask about crops, weather, soil, or market preparation.',
+      'yourQuestion': 'Your question',
+      'assistantHint': 'What should I do in my onion field today?',
+      'speechInput': 'Speak your question',
+      'speechFallback':
+          'Speech input failed. You can type your question instead.',
+      'thinking': 'Thinking...',
+      'askAssistant': 'Ask assistant',
+      'assistantResponse': 'Assistant response',
+      'assistantAdvisory':
+          'Advisory only. Confirm important farming decisions with a local agriculture officer.',
+      'mfiPortfolioTitle': 'MFI Portfolio',
+      'mfiPortfolioUnavailable': 'MFI portfolio unavailable.',
+      'applicantsByDistrict': 'Applicants by district',
+      'scoreBuckets': 'Credit score buckets',
+      'repaymentRate': 'Repayment rate',
+      'catalogTitle': 'Farm Supply Catalog',
+      'catalogCategories': 'Categories',
+      'catalogProducts': 'products',
+      'catalogSearch': 'Search products',
+      'catalogError': 'Catalog unavailable',
+      'catalogEmpty': 'No categories available',
+      'catalogNoProducts': 'No products found',
+      'catalogIndicativePrice': 'Indicative price',
+      'catalogMinimumOrder': 'Minimum order',
+      'catalogPriceViewing': 'You are viewing',
+      'catalogFarmerPrice': 'Farmer price',
+      'catalogWholesalePrice': 'Wholesale price',
+      'catalogRetailerPrice': 'Retailer price',
+      'catalogCustomerPrice': 'Customer price',
+      'catalogPriceUpdated': 'Price updated',
     },
     'bn': {
       'appName': 'কৃষিবন্ধু (Agro-Bridge)',
@@ -149,7 +186,8 @@ class AppLocalizations {
       'creditScoreTitle': 'কৃষিবন্ধু অটোমেটেড ক্রেডিট স্কোর',
       'creditTier': 'ক্রেডিট গ্রেড',
       'preApprovedLoan': 'অনুমোদিত সর্বোচ্চ জামানতহীন ঋণের সীমা',
-      'noCollateralNotice': 'কোনো জমির দলিল বা জামানত লাগবে না: প্ল্যাটফর্মের বিক্রির রেকর্ডের বিপরীতে সহজ ঋণ',
+      'noCollateralNotice':
+          'কোনো জমির দলিল বা জামানত লাগবে না: প্ল্যাটফর্মের বিক্রির রেকর্ডের বিপরীতে সহজ ঋণ',
       'emiCalculator': 'মাসিক কিস্তি ও রিপেমেন্ট সিমুলেটর',
       'calculateEmi': 'কিস্তির হিসাব বের করুন',
       'applyForLoan': 'সহজ কৃষিঋণের জন্য আবেদন করুন',
@@ -186,6 +224,41 @@ class AppLocalizations {
       'minOrder': 'সর্বনিম্ন অর্ডার',
       'pluggableFeatures': 'প্লাগিন ফিচার ক্যাটালগ',
       'batchProvenanceScanner': 'ব্যাচ ট্রেসেবিলিটি স্ক্যানার',
+      'mapDetected': 'শনাক্ত স্থান: {division}',
+      'mapHint': 'ফসলের লট দেখতে মার্কারে চাপ দিন',
+      'viewLots': 'লট দেখুন',
+      'assistantTitle': 'বাংলা কৃষি সহায়ক',
+      'assistantPrompt':
+          'ফসল, আবহাওয়া, মাটি বা বাজার প্রস্তুতি সম্পর্কে জিজ্ঞাসা করুন।',
+      'yourQuestion': 'আপনার প্রশ্ন',
+      'assistantHint': 'আজ পেঁয়াজের জমিতে কী করব?',
+      'speechInput': 'প্রশ্নটি বলুন',
+      'speechFallback': 'কথা শনাক্ত করা যায়নি। আপনি লিখে প্রশ্ন করতে পারেন।',
+      'thinking': 'উত্তর প্রস্তুত হচ্ছে...',
+      'askAssistant': 'সহায়ককে জিজ্ঞাসা করুন',
+      'assistantResponse': 'সহায়কের উত্তর',
+      'assistantAdvisory':
+          'এটি পরামর্শমাত্র। গুরুত্বপূর্ণ সিদ্ধান্তের আগে স্থানীয় কৃষি কর্মকর্তার মতামত নিন।',
+      'mfiPortfolioTitle': 'ক্ষুদ্রঋণ পোর্টফোলিও',
+      'mfiPortfolioUnavailable': 'ক্ষুদ্রঋণ পোর্টফোলিও পাওয়া যায়নি।',
+      'applicantsByDistrict': 'জেলাভিত্তিক আবেদনকারী',
+      'scoreBuckets': 'ক্রেডিট স্কোরের ভাগ',
+      'repaymentRate': 'ঋণ পরিশোধের হার',
+      'catalogTitle': 'কৃষি উপকরণ ক্যাটালগ',
+      'catalogCategories': 'ক্যাটাগরি',
+      'catalogProducts': 'টি পণ্য',
+      'catalogSearch': 'পণ্য খুঁজুন',
+      'catalogError': 'ক্যাটালগ পাওয়া যাচ্ছে না',
+      'catalogEmpty': 'কোনো ক্যাটাগরি নেই',
+      'catalogNoProducts': 'কোনো পণ্য পাওয়া যায়নি',
+      'catalogIndicativePrice': 'আনুমানিক মূল্য',
+      'catalogMinimumOrder': 'সর্বনিম্ন অর্ডার',
+      'catalogPriceViewing': 'আপনি যে মূল্য দেখছেন',
+      'catalogFarmerPrice': 'কৃষক মূল্য',
+      'catalogWholesalePrice': 'পাইকারি মূল্য',
+      'catalogRetailerPrice': 'খুচরা বিক্রেতার মূল্য',
+      'catalogCustomerPrice': 'গ্রাহক মূল্য',
+      'catalogPriceUpdated': 'মূল্য হালনাগাদ',
     }
   };
 
@@ -196,8 +269,7 @@ class AppLocalizations {
   }
 }
 
-class AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const AppLocalizationsDelegate();
 
   @override
@@ -218,7 +290,8 @@ class LocaleCubit extends Cubit<Locale> {
   static const _key = 'app_locale';
 
   LocaleCubit(this._prefs)
-      : super(Locale(_prefs.getString(_key) ?? 'bn')); // Bangla first by default!
+      : super(
+            Locale(_prefs.getString(_key) ?? 'bn')); // Bangla first by default!
 
   void setLocale(String languageCode) {
     _prefs.setString(_key, languageCode);

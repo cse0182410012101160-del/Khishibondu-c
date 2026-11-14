@@ -11,6 +11,7 @@ enum UserRole {
   farmer
   buyer
   ngo
+  agent
   admin
 }
 
@@ -39,7 +40,11 @@ enum OrderStatus {
 }
 
 enum EscrowStatus {
+  CREATED
   LOCKED
+  FUNDED
+  IN_TRANSIT
+  DELIVERED
   RELEASED
   REFUNDED
   DISPUTED
@@ -64,6 +69,7 @@ model User {
 model CropLot {
   id                String      @id @default(uuid())
   farmerId          String
+  agentId           String?
   cropType          String
   title             String
   quantity          Decimal     @db.Decimal(12, 2)
@@ -79,6 +85,7 @@ model CropLot {
   bids              Bid[]
   orders            Order[]
   traceEvents       TraceEvent[]
+  sprayRecords      SprayRecord[]
 }
 
 model Bid {
@@ -182,6 +189,42 @@ model TraceEvent {
   location  String?
   timestamp DateTime @default(now())
   lot       CropLot  @relation(fields: [lotId], references: [id])
+}
+
+model SprayRecord {
+  id              String   @id @default(uuid())
+  lotId           String
+  chemical        String
+  date            DateTime
+  preHarvestDays  Int
+  lot             CropLot  @relation(fields: [lotId], references: [id])
+}
+
+model GroupLot {
+  id            String            @id @default(uuid())
+  groupId       String
+  leaderId      String
+  status        String            @default("OPEN")
+  members       GroupLotMember[]
+  walletRecords WalletRecord[]
+  createdAt     DateTime          @default(now())
+}
+
+model GroupLotMember {
+  id         String   @id @default(uuid())
+  groupLotId String
+  memberId   String
+  kg         Decimal  @db.Decimal(12, 3)
+  groupLot   GroupLot @relation(fields: [groupLotId], references: [id])
+}
+
+model WalletRecord {
+  id         String    @id @default(uuid())
+  groupLotId String?
+  memberId   String
+  amountPaisa Int
+  createdAt  DateTime  @default(now())
+  groupLot   GroupLot? @relation(fields: [groupLotId], references: [id])
 }
 
 model AuditLog {

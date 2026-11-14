@@ -33,6 +33,26 @@ class QualityCheckItem extends Equatable {
   List<Object?> get props => [parameter, result, status];
 }
 
+class SprayRecord extends Equatable {
+  final String chemical;
+  final String date;
+  final int preHarvestDays;
+
+  const SprayRecord(
+      {required this.chemical,
+      required this.date,
+      required this.preHarvestDays});
+
+  factory SprayRecord.fromJson(Map<String, dynamic> json) => SprayRecord(
+        chemical: json['chemical'] ?? '',
+        date: json['date'] ?? '',
+        preHarvestDays: json['preHarvestDays'] ?? 0,
+      );
+
+  @override
+  List<Object?> get props => [chemical, date, preHarvestDays];
+}
+
 class TraceabilityEntity extends Equatable {
   final String batchQrCode;
   final String verificationUrl;
@@ -45,6 +65,8 @@ class TraceabilityEntity extends Equatable {
   final Map<String, dynamic> farmLocation;
   final Map<String, dynamic> farmerProfile;
   final List<QualityCheckItem> qualityChecks;
+  final List<SprayRecord> sprayRecords;
+  final Map<String, dynamic> harvestWarning;
 
   const TraceabilityEntity({
     required this.batchQrCode,
@@ -58,9 +80,11 @@ class TraceabilityEntity extends Equatable {
     required this.farmLocation,
     required this.farmerProfile,
     required this.qualityChecks,
+    required this.sprayRecords,
+    required this.harvestWarning,
   });
 
   @override
-  List<Object?> get props => [batchQrCode, cropTitle, harvestDate];
+  List<Object?> get props =>
+      [batchQrCode, cropTitle, harvestDate, sprayRecords, harvestWarning];
 }
-

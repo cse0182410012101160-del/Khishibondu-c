@@ -1,48 +1,54 @@
-const { v4: uuidv4 } = require('uuid');
-const db = require('../../database/store');
+const { v4: uuidv4 } = require("uuid");
+const db = require("../../database/store");
+const { enqueueCreditScoreJob } = require("../credit/creditJob");
+const { assertCanRaiseDispute } = require("./disputeService");
 
 // Get orders based on user role
 function getOrders(req, res) {
   const user = req.user;
   let results = [...db.orders];
 
-  if (user.role === 'farmer') {
-    results = results.filter(o => o.farmerId === user.id);
-  } else if (user.role === 'buyer') {
-    results = results.filter(o => o.buyerId === user.id);
+  if (user.role === "farmer") {
+    results = results.filter((o) => o.farmerId === user.id);
+  } else if (user.role === "buyer") {
+    results = results.filter((o) => o.buyerId === user.id);
   } // NGO and Admin can view all or filtered
 
   const { status } = req.query;
   if (status) {
-    results = results.filter(o => o.status.toLowerCase() === status.toLowerCase());
+    results = results.filter(
+      (o) => o.status.toLowerCase() === status.toLowerCase(),
+    );
   }
 
   return res.json({
     success: true,
     count: results.length,
-    orders: results
+    orders: results,
   });
 }
 
 // Get single order with complete timeline
 function getOrderById(req, res) {
   const { id } = req.params;
-  const order = db.orders.find(o => o.id === id);
+  const order = db.orders.find((o) => o.id === id);
 
   if (!order) {
-    return res.status(404).json({ success: false, message: 'Order not found.' });
+    return res
+      .status(404)
+      .json({ success: false, message: "Order not found." });
   }
 
-  const escrow = db.escrowTransactions.find(e => e.orderId === id);
-  const dispute = db.disputes.find(d => d.orderId === id);
+  const escrow = db.escrowTransactions.find((e) => e.orderId === id);
+  const dispute = db.disputes.find((d) => d.orderId === id);
 
   return res.json({
     success: true,
     order: {
       ...order,
       escrow,
-      dispute
-    }
+      dispute,
+    },
   });
 }
 
@@ -52,24 +58,26 @@ function updateOrderStatus(req, res) {
   const { nextStatus, note } = req.body;
 
   const validTransitions = {
-    'Listed': ['Negotiating', 'Confirmed', 'Cancelled'],
-    'Negotiating': ['Confirmed', 'Cancelled'],
-    'Confirmed': ['Delivered', 'Disputed', 'Cancelled'],
-    'Delivered': ['Paid', 'Disputed'],
-    'Disputed': ['Paid', 'Cancelled'],
-    'Paid': []
+    Listed: ["Negotiating", "Confirmed", "Cancelled"],
+    Negotiating: ["Confirmed", "Cancelled"],
+    Confirmed: ["Delivered", "Disputed", "Cancelled"],
+    Delivered: ["Paid", "Disputed"],
+    Disputed: ["Paid", "Cancelled"],
+    Paid: [],
   };
 
-  const order = db.orders.find(o => o.id === id);
+  const order = db.orders.find((o) => o.id === id);
   if (!order) {
-    return res.status(404).json({ success: false, message: 'Order not found.' });
+    return res
+      .status(404)
+      .json({ success: false, message: "Order not found." });
   }
 
   const allowed = validTransitions[order.status] || [];
-  if (!allowed.includes(nextStatus) && req.user.role !== 'admin') {
+  if (!allowed.includes(nextStatus) && req.user.role !== "admin") {
     return res.status(400).json({
       success: false,
-      message: `Invalid state transition from '${order.status}' to '${nextStatus}'. Allowed: ${allowed.join(', ')}`
+      message: `Invalid state transition from '${order.status}' to '${nextStatus}'. Allowed: ${allowed.join(", ")}`,
     });
   }
 
@@ -77,84 +85,165 @@ function updateOrderStatus(req, res) {
   order.timeline.push({
     status: nextStatus,
     timestamp: new Date().toISOString(),
-    note: note || `Order updated to ${nextStatus} by ${req.user.name}`
+    note: note || `Order updated to ${nextStatus} by ${req.user.name}`,
   });
 
   // If status becomes Paid, release escrow
-  if (nextStatus === 'Paid') {
-    order.escrowStatus = 'RELEASED';
-    const escrow = db.escrowTransactions.find(e => e.orderId === order.id);
+  if (nextStatus === "Paid") {
+    order.escrowStatus = "RELEASED";
+    const escrow = db.escrowTransactions.find((e) => e.orderId === order.id);
     if (escrow) {
-      escrow.status = 'RELEASED';
+      escrow.status = "RELEASED";
       escrow.releasedAt = new Date().toISOString();
     }
 
     // Update farmer fulfillment stats
-    const farmer = db.users.find(u => u.id === order.farmerId);
+    const farmer = db.users.find((u) => u.id === order.farmerId);
     if (farmer) {
       farmer.totalFulfilledOrders = (farmer.totalFulfilledOrders || 0) + 1;
-      farmer.totalSalesVolumeBdt = (farmer.totalSalesVolumeBdt || 0) + order.totalAmount;
+      farmer.totalSalesVolumeBdt =
+        (farmer.totalSalesVolumeBdt || 0) + order.totalAmount;
     }
+    void enqueueCreditScoreJob(order.farmerId).catch((error) =>
+      console.error(`Credit score job failed: ${error.message}`),
+    );
   }
 
   return res.json({
     success: true,
     message: `Order status advanced to '${nextStatus}'.`,
-    order
+    order,
   });
 }
 
 // Buyer confirms delivery -> triggers escrow release to farmer
 function confirmDelivery(req, res) {
   const { id } = req.params;
-  const order = db.orders.find(o => o.id === id);
+  const order = db.orders.find((o) => o.id === id);
 
   if (!order) {
-    return res.status(404).json({ success: false, message: 'Order not found.' });
+    return res
+      .status(404)
+      .json({ success: false, message: "Order not found." });
   }
 
-  if (order.buyerId !== req.user.id && req.user.role !== 'admin') {
-    return res.status(403).json({ success: false, message: 'Only the ordering buyer or admin can confirm delivery.' });
+  if (order.buyerId !== req.user.id && req.user.role !== "admin") {
+    return res
+      .status(403)
+      .json({
+        success: false,
+        message: "Only the ordering buyer or admin can confirm delivery.",
+      });
   }
 
-  order.status = 'Paid';
-  order.escrowStatus = 'RELEASED';
+  order.status = "Paid";
+  order.escrowStatus = "RELEASED";
   order.timeline.push({
-    status: 'Delivered',
+    status: "Delivered",
     timestamp: new Date().toISOString(),
-    note: 'Delivery verified by buyer at unloading depot.'
+    note: "Delivery verified by buyer at unloading depot.",
   });
   order.timeline.push({
-    status: 'Paid',
+    status: "Paid",
     timestamp: new Date().toISOString(),
-    note: `Escrow funds of ${order.totalAmount} BDT released to farmer via ${order.mfsPaymentMethod}.`
+    note: `Escrow funds of ${order.totalAmount} BDT released to farmer via ${order.mfsPaymentMethod}.`,
   });
 
-  const escrow = db.escrowTransactions.find(e => e.orderId === order.id);
+  const escrow = db.escrowTransactions.find((e) => e.orderId === order.id);
   if (escrow) {
-    escrow.status = 'RELEASED';
+    escrow.status = "RELEASED";
     escrow.releasedAt = new Date().toISOString();
   }
 
   // Update farmer sales stats
-  const farmer = db.users.find(u => u.id === order.farmerId);
+  const farmer = db.users.find((u) => u.id === order.farmerId);
   if (farmer) {
     farmer.totalFulfilledOrders = (farmer.totalFulfilledOrders || 0) + 1;
-    farmer.totalSalesVolumeBdt = (farmer.totalSalesVolumeBdt || 0) + order.totalAmount;
+    farmer.totalSalesVolumeBdt =
+      (farmer.totalSalesVolumeBdt || 0) + order.totalAmount;
   }
+  void enqueueCreditScoreJob(order.farmerId).catch((error) =>
+    console.error(`Credit score job failed: ${error.message}`),
+  );
 
   return res.json({
     success: true,
-    message: 'Delivery confirmed! Escrow funds released to farmer.',
+    message: "Delivery confirmed! Escrow funds released to farmer.",
     order,
-    escrow
+    escrow,
   });
+}
+
+function createDispute(req, res) {
+  const order = db.orders.find((item) => item.id === req.params.id);
+  if (!order)
+    return res
+      .status(404)
+      .json({ success: false, message: "Order not found." });
+  try {
+    assertCanRaiseDispute({ user: req.user, order });
+  } catch (error) {
+    return res.status(403).json({ success: false, message: error.message });
+  }
+  const { reason, photoUrls } = req.body;
+  if (!reason)
+    return res
+      .status(400)
+      .json({ success: false, message: "reason is required." });
+  const dispute = {
+    id: `dsp_${uuidv4().slice(0, 8)}`,
+    orderId: order.id,
+    raisedByUserId: req.user.id,
+    reason,
+    photoUrls: Array.isArray(photoUrls) ? photoUrls : [],
+    status: "PENDING_REVIEW",
+    createdAt: new Date().toISOString(),
+  };
+  db.disputes.unshift(dispute);
+  order.status = "DISPUTED";
+  const escrow = db.escrowTransactions.find(
+    (item) => item.orderId === order.id,
+  );
+  if (escrow) escrow.status = "DISPUTED";
+  return res.status(201).json({ success: true, dispute, escrow });
+}
+
+function resolveOrderDispute(req, res) {
+  const dispute = db.disputes.find((item) => item.id === req.params.id);
+  if (!dispute)
+    return res
+      .status(404)
+      .json({ success: false, message: "Dispute not found." });
+  const decision = req.body.decision;
+  if (!["RELEASE", "REFUND"].includes(decision))
+    return res
+      .status(400)
+      .json({ success: false, message: "decision must be RELEASE or REFUND." });
+  const order = db.orders.find((item) => item.id === dispute.orderId);
+  const escrow = db.escrowTransactions.find(
+    (item) => item.orderId === dispute.orderId,
+  );
+  dispute.status =
+    decision === "RELEASE" ? "RESOLVED_SELLER_PAID" : "RESOLVED_BUYER_REFUNDED";
+  dispute.resolution = decision;
+  if (order) order.status = decision === "RELEASE" ? "Paid" : "Cancelled";
+  if (escrow) escrow.status = decision === "RELEASE" ? "RELEASED" : "REFUNDED";
+  db.auditLogs.push({
+    id: `audit_${uuidv4().slice(0, 8)}`,
+    actorId: req.user.id,
+    action: `DISPUTE_${decision}`,
+    entity: "Dispute",
+    entityId: dispute.id,
+    createdAt: new Date().toISOString(),
+  });
+  return res.json({ success: true, dispute, order, escrow });
 }
 
 module.exports = {
   getOrders,
   getOrderById,
   updateOrderStatus,
-  confirmDelivery
+  confirmDelivery,
+  createDispute,
+  resolveOrderDispute,
 };
-

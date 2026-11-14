@@ -1,6 +1,8 @@
 import 'package:agro_bridge/core/constants/api_endpoints.dart';
 import 'package:agro_bridge/core/network/api_client.dart';
 import 'package:agro_bridge/features/marketplace/data/models/crop_model.dart';
+import 'package:agro_bridge/core/network/offline_request_queue.dart';
+import 'package:dio/dio.dart';
 
 abstract class MarketplaceRemoteDataSource {
   Future<List<CropModel>> getCrops({
@@ -17,8 +19,9 @@ abstract class MarketplaceRemoteDataSource {
 
 class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
   final ApiClient _client;
+  final OfflineRequestQueue? _offlineQueue;
 
-  MarketplaceRemoteDataSourceImpl(this._client);
+  MarketplaceRemoteDataSourceImpl(this._client, [this._offlineQueue]);
 
   @override
   Future<List<CropModel>> getCrops({
@@ -46,20 +49,32 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
 
   @override
   Future<CropModel> createCrop(Map<String, dynamic> data) async {
-    final res = await _client.post(ApiEndpoints.crops, data: data);
-    return CropModel.fromJson(res.data['crop']);
+    try {
+      final res = await _client.post(ApiEndpoints.crops, data: data);
+      return CropModel.fromJson(res.data['crop']);
+    } on DioException {
+      await _offlineQueue?.enqueueListing(data);
+      rethrow;
+    }
   }
 
   @override
   Future<BidModel> submitBid(String cropId, Map<String, dynamic> data) async {
-    final res = await _client.post(ApiEndpoints.submitBid(cropId), data: data);
-    return BidModel.fromJson(res.data['bid']);
+    try {
+      final res =
+          await _client.post(ApiEndpoints.submitBid(cropId), data: data);
+      return BidModel.fromJson(res.data['bid']);
+    } on DioException {
+      await _offlineQueue?.enqueueBid(cropId, data);
+      rethrow;
+    }
   }
 
   @override
-  Future<Map<String, dynamic>> updateBidStatus(String bidId, String status) async {
-    final res = await _client.put(ApiEndpoints.updateBidStatus(bidId), data: {'status': status});
+  Future<Map<String, dynamic>> updateBidStatus(
+      String bidId, String status) async {
+    final res = await _client
+        .put(ApiEndpoints.updateBidStatus(bidId), data: {'status': status});
     return res.data;
   }
 }
-

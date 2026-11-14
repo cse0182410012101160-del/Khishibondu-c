@@ -1,11 +1,12 @@
-const PgBoss = require('pg-boss');
+const PgBossModule = require("pg-boss");
+const PgBoss = PgBossModule.default || PgBossModule.PgBoss || PgBossModule;
 
 let boss;
 
 function getBoss() {
   if (!boss) {
     if (!process.env.DATABASE_URL) {
-      throw new Error('DATABASE_URL is required for the job queue.');
+      throw new Error("DATABASE_URL is required for the job queue.");
     }
     boss = new PgBoss({ connectionString: process.env.DATABASE_URL });
   }

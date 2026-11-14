@@ -1,10 +1,10 @@
 name: agro_bridge
 description: "Agro-Bridge: Farmer-to-Buyer Marketplace with Embedded Microfinance for Bangladesh"
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -22,6 +22,10 @@ dependencies:
   uuid: ^4.5.1
   qr_flutter: ^4.1.0
   flutter_image_compress: ^2.4.0
+  sqflite: ^2.4.2
+  connectivity_plus: ^6.1.4
+  speech_to_text: ^7.0.0
+  flutter_tts: ^4.2.0
 
   # Firebase — real-time chat, push notifications & crash reporting
   firebase_core: ^3.2.0
@@ -29,14 +33,20 @@ dependencies:
   firebase_crashlytics: ^4.1.1
 
   # Maps & GPS — market discovery & weather alerts
-  google_maps_flutter: ^2.8.0
+  flutter_map: ^8.1.1
+  latlong2: ^0.9.1
   geolocator: ^13.0.2
   permission_handler: ^11.3.1
+  json_annotation: ^4.9.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  build_runner: ^2.4.13
+  json_serializable: ^6.9.0
+  bloc_test: ^9.1.7
+  mocktail: ^1.0.4
 
 flutter:
   uses-material-design: true

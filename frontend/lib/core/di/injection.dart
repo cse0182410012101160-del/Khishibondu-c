@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:agro_bridge/core/storage/cache_service.dart';
 import 'package:agro_bridge/core/network/api_client.dart';
+import 'package:agro_bridge/core/network/offline_request_queue.dart';
 import 'package:agro_bridge/core/localization/app_localizations.dart';
 import 'package:agro_bridge/core/plugins/plugin_registry.dart';
 import 'package:agro_bridge/core/geo/location_service.dart';
@@ -64,6 +65,9 @@ import 'package:agro_bridge/features/analytics/data/datasources/analytics_remote
 import 'package:agro_bridge/features/analytics/domain/repositories/analytics_repository.dart';
 import 'package:agro_bridge/features/analytics/data/repositories/analytics_repository_impl.dart';
 import 'package:agro_bridge/features/analytics/presentation/bloc/analytics_bloc.dart';
+import 'package:agro_bridge/features/catalog/data/repositories/catalog_repository_impl.dart';
+import 'package:agro_bridge/features/catalog/domain/repositories/catalog_repository.dart';
+import 'package:agro_bridge/features/catalog/presentation/bloc/catalog_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -80,6 +84,11 @@ Future<void> initDependencies() async {
 
   final apiClient = ApiClient(sl<CacheService>());
   sl.registerSingleton<ApiClient>(apiClient);
+  final offlineQueue = OfflineRequestQueue();
+  await offlineQueue.initialize(sender: (path, payload, type) async {
+    await apiClient.post(path, data: payload);
+  });
+  sl.registerSingleton<OfflineRequestQueue>(offlineQueue);
 
   final localeCubit = LocaleCubit(sl<SharedPreferences>());
   sl.registerSingleton<LocaleCubit>(localeCubit);
@@ -91,47 +100,77 @@ Future<void> initDependencies() async {
   sl.registerSingleton<PluginRegistry>(pluginRegistry);
 
   // 3. Auth
-  sl.registerLazySingleton<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl(sl<ApiClient>()));
-  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl<AuthRemoteDataSource>(), sl<CacheService>()));
-  sl.registerFactory<AuthBloc>(() => AuthBloc(sl<AuthRepository>()));
+  sl.registerLazySingleton<AuthRemoteDataSource>(
+      () => AuthRemoteDataSourceImpl(sl<ApiClient>()));
+  sl.registerLazySingleton<AuthRepository>(
+      () => AuthRepositoryImpl(sl<AuthRemoteDataSource>(), sl<CacheService>()));
+  sl.registerFactory<AuthBloc>(
+      () => AuthBloc(sl<AuthRepository>(), sl<ApiClient>()));
 
   // 4. Marketplace
-  sl.registerLazySingleton<MarketplaceRemoteDataSource>(() => MarketplaceRemoteDataSourceImpl(sl<ApiClient>()));
-  sl.registerLazySingleton<MarketplaceRepository>(() => MarketplaceRepositoryImpl(sl<MarketplaceRemoteDataSource>(), sl<CacheService>()));
-  sl.registerFactory<MarketplaceBloc>(() => MarketplaceBloc(sl<MarketplaceRepository>()));
+  sl.registerLazySingleton<MarketplaceRemoteDataSource>(() =>
+      MarketplaceRemoteDataSourceImpl(
+          sl<ApiClient>(), sl<OfflineRequestQueue>()));
+  sl.registerLazySingleton<MarketplaceRepository>(() =>
+      MarketplaceRepositoryImpl(
+          sl<MarketplaceRemoteDataSource>(), sl<CacheService>()));
+  sl.registerFactory<MarketplaceBloc>(
+      () => MarketplaceBloc(sl<MarketplaceRepository>()));
 
   // 5. Orders
-  sl.registerLazySingleton<OrdersRemoteDataSource>(() => OrdersRemoteDataSourceImpl(sl<ApiClient>()));
-  sl.registerLazySingleton<OrdersRepository>(() => OrdersRepositoryImpl(sl<OrdersRemoteDataSource>()));
+  sl.registerLazySingleton<OrdersRemoteDataSource>(
+      () => OrdersRemoteDataSourceImpl(sl<ApiClient>()));
+  sl.registerLazySingleton<OrdersRepository>(
+      () => OrdersRepositoryImpl(sl<OrdersRemoteDataSource>()));
   sl.registerFactory<OrdersBloc>(() => OrdersBloc(sl<OrdersRepository>()));
 
   // 6. Escrow
-  sl.registerLazySingleton<EscrowRemoteDataSource>(() => EscrowRemoteDataSourceImpl(sl<ApiClient>()));
-  sl.registerLazySingleton<EscrowRepository>(() => EscrowRepositoryImpl(sl<EscrowRemoteDataSource>()));
+  sl.registerLazySingleton<EscrowRemoteDataSource>(
+      () => EscrowRemoteDataSourceImpl(sl<ApiClient>()));
+  sl.registerLazySingleton<EscrowRepository>(
+      () => EscrowRepositoryImpl(sl<EscrowRemoteDataSource>()));
   sl.registerFactory<EscrowBloc>(() => EscrowBloc(sl<EscrowRepository>()));
 
   // 7. Microfinance
-  sl.registerLazySingleton<MicrofinanceRemoteDataSource>(() => MicrofinanceRemoteDataSourceImpl(sl<ApiClient>()));
-  sl.registerLazySingleton<MicrofinanceRepository>(() => MicrofinanceRepositoryImpl(sl<MicrofinanceRemoteDataSource>()));
-  sl.registerFactory<MicrofinanceBloc>(() => MicrofinanceBloc(sl<MicrofinanceRepository>()));
+  sl.registerLazySingleton<MicrofinanceRemoteDataSource>(
+      () => MicrofinanceRemoteDataSourceImpl(sl<ApiClient>()));
+  sl.registerLazySingleton<MicrofinanceRepository>(
+      () => MicrofinanceRepositoryImpl(sl<MicrofinanceRemoteDataSource>()));
+  sl.registerFactory<MicrofinanceBloc>(
+      () => MicrofinanceBloc(sl<MicrofinanceRepository>()));
 
   // 8. Weather
-  sl.registerLazySingleton<WeatherRemoteDataSource>(() => WeatherRemoteDataSourceImpl(sl<ApiClient>()));
-  sl.registerLazySingleton<WeatherRepository>(() => WeatherRepositoryImpl(sl<WeatherRemoteDataSource>(), sl<CacheService>()));
+  sl.registerLazySingleton<WeatherRemoteDataSource>(
+      () => WeatherRemoteDataSourceImpl(sl<ApiClient>()));
+  sl.registerLazySingleton<WeatherRepository>(() =>
+      WeatherRepositoryImpl(sl<WeatherRemoteDataSource>(), sl<CacheService>()));
   sl.registerFactory<WeatherBloc>(() => WeatherBloc(sl<WeatherRepository>()));
 
   // 9. Traceability
-  sl.registerLazySingleton<TraceabilityRemoteDataSource>(() => TraceabilityRemoteDataSourceImpl(sl<ApiClient>()));
-  sl.registerLazySingleton<TraceabilityRepository>(() => TraceabilityRepositoryImpl(sl<TraceabilityRemoteDataSource>()));
-  sl.registerFactory<TraceabilityBloc>(() => TraceabilityBloc(sl<TraceabilityRepository>()));
+  sl.registerLazySingleton<TraceabilityRemoteDataSource>(
+      () => TraceabilityRemoteDataSourceImpl(sl<ApiClient>()));
+  sl.registerLazySingleton<TraceabilityRepository>(
+      () => TraceabilityRepositoryImpl(sl<TraceabilityRemoteDataSource>()));
+  sl.registerFactory<TraceabilityBloc>(
+      () => TraceabilityBloc(sl<TraceabilityRepository>()));
 
   // 10. Chat
-  sl.registerLazySingleton<ChatRemoteDataSource>(() => ChatRemoteDataSourceImpl(sl<ApiClient>()));
-  sl.registerLazySingleton<ChatRepository>(() => ChatRepositoryImpl(sl<ChatRemoteDataSource>()));
+  sl.registerLazySingleton<ChatRemoteDataSource>(
+      () => ChatRemoteDataSourceImpl(sl<ApiClient>()));
+  sl.registerLazySingleton<ChatRepository>(
+      () => ChatRepositoryImpl(sl<ChatRemoteDataSource>()));
   sl.registerFactory<ChatBloc>(() => ChatBloc(sl<ChatRepository>()));
 
   // 11. Analytics
-  sl.registerLazySingleton<AnalyticsRemoteDataSource>(() => AnalyticsRemoteDataSourceImpl(sl<ApiClient>()));
-  sl.registerLazySingleton<AnalyticsRepository>(() => AnalyticsRepositoryImpl(sl<AnalyticsRemoteDataSource>()));
-  sl.registerFactory<AnalyticsBloc>(() => AnalyticsBloc(sl<AnalyticsRepository>()));
+  sl.registerLazySingleton<AnalyticsRemoteDataSource>(
+      () => AnalyticsRemoteDataSourceImpl(sl<ApiClient>()));
+  sl.registerLazySingleton<AnalyticsRepository>(
+      () => AnalyticsRepositoryImpl(sl<AnalyticsRemoteDataSource>()));
+  sl.registerFactory<AnalyticsBloc>(
+      () => AnalyticsBloc(sl<AnalyticsRepository>()));
+
+  // 12. Catalog
+  sl.registerLazySingleton<CatalogRepository>(
+      () => CatalogRepositoryImpl(sl<ApiClient>()));
+  sl.registerFactory<CatalogBloc>(() => CatalogBloc(sl<CatalogRepository>()));
 }

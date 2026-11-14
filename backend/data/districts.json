@@ -1,0 +1,5 @@
+{
+  "bogura": { "name": "Bogura", "lat": 24.847, "lon": 89.373 },
+  "dinajpur": { "name": "Dinajpur", "lat": 25.627, "lon": 88.633 },
+  "dhaka": { "name": "Dhaka", "lat": 23.81, "lon": 90.413 }
+}

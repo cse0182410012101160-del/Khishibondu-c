@@ -12,7 +12,8 @@ class ApiEndpoints {
   static const String crops = '/marketplace/crops';
   static String cropDetail(String id) => '/marketplace/crops/$id';
   static String submitBid(String cropId) => '/marketplace/crops/$cropId/bids';
-  static String updateBidStatus(String bidId) => '/marketplace/bids/$bidId/status';
+  static String updateBidStatus(String bidId) =>
+      '/marketplace/bids/$bidId/status';
 
   // Orders
   static const String orders = '/orders';
@@ -32,6 +33,7 @@ class ApiEndpoints {
   static const String cropQualityCheck = '/ai/crop-quality';
   static const String procurement = '/procurement';
   static const String ngoAnalytics = '/analytics/ngo';
+  static const String mfiPortfolio = '/mfi/portfolio';
 
   // Stretch feature sandbox capabilities
   static const String inputShop = '/future/input-shop';
@@ -41,11 +43,14 @@ class ApiEndpoints {
   static const String exportInquiries = '/future/export-inquiries';
 
   // Microfinance
-  static String creditScore(String? farmerId) => farmerId != null ? '/microfinance/credit-score/$farmerId' : '/microfinance/credit-score';
+  static String creditScore(String? farmerId) => farmerId != null
+      ? '/microfinance/credit-score/$farmerId'
+      : '/microfinance/credit-score';
   static const String simulateEmi = '/microfinance/simulate-emi';
   static const String applyLoan = '/microfinance/apply';
   static const String loanApplications = '/microfinance/applications';
-  static String updateLoanStatus(String id) => '/microfinance/applications/$id/status';
+  static String updateLoanStatus(String id) =>
+      '/microfinance/applications/$id/status';
 
   // Traceability
   static String traceBatch(String batchCode) => '/traceability/$batchCode';
@@ -57,14 +62,22 @@ class ApiEndpoints {
 
   // Chat
   static const String chatThreads = '/chat/threads';
-  static String chatMessages(String threadId) => '/chat/threads/$threadId/messages';
+  static String chatMessages(String threadId) =>
+      '/chat/threads/$threadId/messages';
 
   // Analytics
-  static String farmerAnalytics(String? farmerId) => farmerId != null ? '/analytics/farmer/$farmerId' : '/analytics/farmer';
+  static String farmerAnalytics(String? farmerId) =>
+      farmerId != null ? '/analytics/farmer/$farmerId' : '/analytics/farmer';
   static const String adminAnalytics = '/analytics/admin';
 
   // Plugins & Feature Flags
   static const String plugins = '/plugins';
   static String togglePlugin(String id) => '/plugins/$id/toggle';
   static const String registerPlugin = '/plugins/register';
+
+    // Catalog
+    static const String catalogCategories = '/catalog/categories';
+    static String catalogCategoryProducts(String slug) => '/catalog/categories/$slug/products';
+    static String catalogProduct(String slug) => '/catalog/products/$slug';
+    static String catalogPriceLadder(String slug) => '/catalog/products/$slug/price-ladder';
 }

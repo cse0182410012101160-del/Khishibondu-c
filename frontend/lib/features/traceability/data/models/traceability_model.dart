@@ -13,24 +13,41 @@ class TraceabilityModel extends TraceabilityEntity {
     required super.farmLocation,
     required super.farmerProfile,
     required super.qualityChecks,
+    required super.sprayRecords,
+    required super.harvestWarning,
   });
 
   factory TraceabilityModel.fromJson(Map<String, dynamic> json) {
     final prov = json['provenance'] ?? json;
     return TraceabilityModel(
       batchQrCode: json['batchQrCode'] ?? '',
-      verificationUrl: json['verificationUrl'] ?? 'https://agro-bridge.bd/trace',
+      verificationUrl:
+          json['verificationUrl'] ?? 'https://agro-bridge.bd/trace',
       cropTitle: prov['cropTitle'] ?? 'Harvest Produce',
       cropTitleBn: prov['cropTitleBn'],
       category: prov['category'] ?? 'Crop',
       grade: prov['grade'] ?? 'A',
       organicCertified: prov['organicCertified'] ?? false,
       harvestDate: prov['harvestDate'] ?? '2026-03-01',
-      farmLocation: prov['farmLocation'] != null ? Map<String, dynamic>.from(prov['farmLocation']) : {},
-      farmerProfile: prov['farmerProfile'] != null ? Map<String, dynamic>.from(prov['farmerProfile']) : {},
+      farmLocation: prov['farmLocation'] != null
+          ? Map<String, dynamic>.from(prov['farmLocation'])
+          : {},
+      farmerProfile: prov['farmerProfile'] != null
+          ? Map<String, dynamic>.from(prov['farmerProfile'])
+          : {},
       qualityChecks: prov['qualityChecks'] != null
-          ? (prov['qualityChecks'] as List).map((q) => QualityCheckItem.fromJson(q)).toList()
+          ? (prov['qualityChecks'] as List)
+              .map((q) => QualityCheckItem.fromJson(q))
+              .toList()
           : [],
+      sprayRecords: prov['sprayRecords'] != null
+          ? (prov['sprayRecords'] as List)
+              .map((record) => SprayRecord.fromJson(record))
+              .toList()
+          : [],
+      harvestWarning: prov['harvestWarning'] != null
+          ? Map<String, dynamic>.from(prov['harvestWarning'])
+          : {'warning': false},
     );
   }
 
@@ -47,7 +64,14 @@ class TraceabilityModel extends TraceabilityEntity {
       'farmLocation': farmLocation,
       'farmerProfile': farmerProfile,
       'qualityChecks': qualityChecks.map((q) => q.toJson()).toList(),
+      'sprayRecords': sprayRecords
+          .map((record) => {
+                'chemical': record.chemical,
+                'date': record.date,
+                'preHarvestDays': record.preHarvestDays,
+              })
+          .toList(),
+      'harvestWarning': harvestWarning,
     };
   }
 }
-

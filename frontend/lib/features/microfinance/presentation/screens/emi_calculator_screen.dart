@@ -12,9 +12,13 @@ class EmiCalculatorScreen extends StatefulWidget {
 class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
   double _principal = 100000;
   int _tenureMonths = 6;
-  final double _annualRate = 9.0;
+  double _annualRate = 9.0;
+  String _method = 'declining';
 
   double get _monthlyEmi {
+    if (_method == 'flat') {
+      return _totalPayable / _tenureMonths;
+    }
     final p = _principal;
     final r = (_annualRate / 100) / 12;
     final n = _tenureMonths;
@@ -22,7 +26,20 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
     return (p * r * pow(1 + r, n)) / (pow(1 + r, n) - 1);
   }
 
-  double get _totalPayable => _monthlyEmi * _tenureMonths;
+  double get _totalPayable {
+    if (_method == 'flat') {
+      return _principal +
+          (_principal * (_annualRate / 100) * (_tenureMonths / 12));
+    }
+    final p = _principal;
+    final r = (_annualRate / 100) / 12;
+    final n = _tenureMonths;
+    return r == 0 ? p : ((p * r * pow(1 + r, n)) / (pow(1 + r, n) - 1)) * n;
+  }
+
+  double get _apr => _method == 'flat'
+      ? _annualRate * (2 * _tenureMonths / (_tenureMonths + 1))
+      : _annualRate;
   double get _totalInterest => _totalPayable - _principal;
 
   @override
@@ -47,36 +64,75 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
               ),
               child: Column(
                 children: [
-                  const Text('Estimated Monthly Installment (EMI)', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                  const Text('Estimated Monthly Installment (EMI)',
+                      style: TextStyle(color: Colors.white70, fontSize: 13)),
                   const SizedBox(height: 6),
                   Text(
                     '৳ ${_monthlyEmi.round().toString()}',
-                    style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold),
                   ),
-                  const Text('/ month', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                  const Text('/ month',
+                      style: TextStyle(color: Colors.white70, fontSize: 13)),
                   const Divider(color: Colors.white24, height: 28),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       Column(
                         children: [
-                          const Text('Principal Amount', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                          const Text('Principal Amount',
+                              style: TextStyle(
+                                  color: Colors.white70, fontSize: 11)),
                           const SizedBox(height: 2),
-                          Text('৳ ${_principal.round()}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                          Text('৳ ${_principal.round()}',
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15)),
                         ],
                       ),
                       Column(
                         children: [
-                          const Text('Total Interest (9%)', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                          Text(
+                              'Total Interest (${_apr.toStringAsFixed(1)}% APR)',
+                              style: const TextStyle(
+                                  color: Colors.white70, fontSize: 11)),
                           const SizedBox(height: 2),
-                          Text('৳ ${_totalInterest.round()}', style: const TextStyle(color: AppColors.secondary, fontWeight: FontWeight.bold, fontSize: 15)),
+                          Text('৳ ${_totalInterest.round()}',
+                              style: const TextStyle(
+                                  color: AppColors.secondary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15)),
                         ],
                       ),
                       Column(
                         children: [
-                          const Text('Total Payable', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                          const Text('Total Payable',
+                              style: TextStyle(
+                                  color: Colors.white70, fontSize: 11)),
                           const SizedBox(height: 2),
-                          Text('৳ ${_totalPayable.round()}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                          Text('৳ ${_totalPayable.round()}',
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15)),
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          const Text('APR',
+                              style: TextStyle(
+                                  color: Colors.white70, fontSize: 11)),
+                          const SizedBox(height: 2),
+                          Text('${_apr.toStringAsFixed(1)}%',
+                              style: TextStyle(
+                                  color: _apr > 27
+                                      ? Colors.redAccent
+                                      : Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15)),
                         ],
                       ),
                     ],
@@ -97,8 +153,13 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Loan Principal (ঋণের পরিমাণ)', style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text('৳ ${_principal.round()} BDT', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 15)),
+                        const Text('Loan Principal (ঋণের পরিমাণ)',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text('৳ ${_principal.round()} BDT',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                                fontSize: 15)),
                       ],
                     ),
                     Slider(
@@ -110,7 +171,34 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
                       onChanged: (val) => setState(() => _principal = val),
                     ),
                     const SizedBox(height: 14),
-                    const Text('Repayment Tenure (পরিশোধের মেয়াদ)', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Text('Interest Method',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: ['declining', 'flat'].map((method) {
+                        final isSelected = _method == method;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            label: Text(method == 'flat'
+                                ? 'Flat rate'
+                                : 'Declining balance'),
+                            selected: isSelected,
+                            selectedColor: AppColors.primary,
+                            labelStyle: TextStyle(
+                                color: isSelected
+                                    ? Colors.white
+                                    : AppColors.textPrimary),
+                            onSelected: (selected) {
+                              if (selected) setState(() => _method = method);
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 14),
+                    const Text('Repayment Tenure (পরিশোধের মেয়াদ)',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -121,11 +209,17 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
                           selected: isSelected,
                           selectedColor: AppColors.primary,
                           labelStyle: TextStyle(
-                            color: isSelected ? Colors.white : AppColors.textPrimary,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            color: isSelected
+                                ? Colors.white
+                                : AppColors.textPrimary,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                           ),
                           onSelected: (selected) {
-                            if (selected) setState(() => _tenureMonths = months);
+                            if (selected) {
+                              setState(() => _tenureMonths = months);
+                            }
                           },
                         );
                       }).toList(),
@@ -134,16 +228,30 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Annual Concession Rate', style: TextStyle(fontWeight: FontWeight.bold)),
+                        const Text('Annual Interest Rate',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: AppColors.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: Text('$_annualRate% p.a. (Agricultural Cap)', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 12)),
+                          child: Text('${_annualRate.toStringAsFixed(1)}% p.a.',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                  fontSize: 12)),
                         ),
                       ],
+                    ),
+                    Slider(
+                      value: _annualRate,
+                      min: 0,
+                      max: 40,
+                      divisions: 80,
+                      activeColor: AppColors.primary,
+                      onChanged: (value) => setState(() => _annualRate = value),
                     ),
                   ],
                 ),
@@ -151,6 +259,28 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
             ),
 
             const SizedBox(height: 16),
+
+            if (_apr > 27)
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF1F2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFFDA4AF)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.warning_amber_rounded, color: Colors.red),
+                    SizedBox(width: 10),
+                    Expanded(
+                        child: Text(
+                            'Warning: APR is above 27%. Review the repayment cost before applying.',
+                            style: TextStyle(color: Color(0xFF9F1239)))),
+                  ],
+                ),
+              ),
+
+            if (_apr > 27) const SizedBox(height: 16),
 
             // Seasonal Repayment Note
             Container(
@@ -179,4 +309,3 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
     );
   }
 }
-
